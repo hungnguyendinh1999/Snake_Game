@@ -1,7 +1,8 @@
 #include <iostream>
 #include <ncurses.h>
+#include <string>
+#include <fstream>
 
-// you don't need to put this if you are using Xcode
 #define KEY_UP 0403
 #define KEY_DOWN 0402
 #define KEY_LEFT 0404
@@ -94,16 +95,20 @@ void Input()
     switch (c)
     {
     case KEY_LEFT:
-        dir = LEFT;
+        if (dir != RIGHT)
+            dir = LEFT;
         break;
     case KEY_RIGHT:
-        dir = RIGHT;
+        if (dir != LEFT)
+            dir = RIGHT;
         break;
     case KEY_UP:
-        dir = UP;
+        if (dir != DOWN)
+            dir = UP;
         break;
     case KEY_DOWN:
-        dir = DOWN;
+        if (dir != UP)
+            dir = DOWN;
         break;
     case 113:
         gameOver = true;
@@ -164,23 +169,96 @@ void Logic()
 
     for (int i = 0; i < nTail; i++)
     {
-        if (tailX[i] == x && tailY[i] == y) {
+        if (tailX[i] == x && tailY[i] == y)
+        {
             gameOver = true;
         }
     }
 }
-int main()
-{
-    Setup();
 
-    while (!gameOver)
+void OpeningScreen()
+{
+    ifstream file("beginscreen.txt");
+    if (!file)
     {
-        Draw();
-        Input();
-        Logic();
+
+        cout << "Cannot open input file!" << endl;
+        return;
     }
+    string line;
+    int row = 0;
+    while (getline(file, line))
+    {
+        char *char_arr;
+        char_arr = &line[0];
+        mvprintw(row++, 0, char_arr);
+    }
+
+}
+int startGame();
+void GameOver()
+{
+    ifstream file("gameover.txt");
+    if (!file)
+    {
+
+        cout << "Cannot open input file!" << endl;
+        return;
+    }
+    string line;
+    int row = 0;
+    while (getline(file, line))
+    {
+        char *char_arr;
+        char_arr = &line[0];
+        mvprintw(row++, 0, char_arr);
+    }
+
+    int c = getch();
+    switch(c)
+    {
+        case KEY_LEFT:
+            gameOver = false;
+            startGame();
+            break;
+        case 'q':
+            break;
+    }
+    refresh();
+}
+
+int startGame()
+{
+    
+    keypad(stdscr, TRUE);
+
+    int c = getch();
+    switch (c)
+    {
+    case KEY_LEFT:
+        while (!gameOver)
+        {
+            Draw();
+            Input();
+            Logic();
+        }
+        GameOver();
+        break;
+    case 'q':
+        break;
+    
+    }
+    
 
     getch();
     endwin();
     return 0;
+}
+
+int main()
+{
+    Setup();
+    OpeningScreen();
+
+    return startGame();
 }
